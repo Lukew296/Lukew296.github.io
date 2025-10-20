@@ -33,6 +33,27 @@ header {
     align-items: center;
 }
 
+.auth-buttons .auth-btn {
+    background-color: transparent;
+    border: 1px solid var(--accent-red);
+    color: var(--text-primary);
+    padding: 8px 20px;
+    margin-left: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+    text-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.auth-buttons .auth-btn:hover {
+    background-color: var(--accent-red);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+}
+
 .logo {
     font-size: 28px;
     font-weight: 900;
