@@ -9,7 +9,7 @@
 <script type="text/javascript">
   // Initialize EmailJS with your public key
   (function() {
-    emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your actual EmailJS public key
+    emailjs.init("kUBZAGfCosCDHAvRT"); // Replace with your actual EmailJS public key
   })();
   
   // Function to handle form submission
@@ -27,7 +27,7 @@
     statusMessage.innerHTML = '';
     
     // Send email using EmailJS
-    emailjs.sendForm('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', form)
+    emailjs.sendForm('service_fh1y1vm', 'template_fnegoya', form)
       .then(function(response) {
         console.log('SUCCESS!', response.status, response.text);
         statusMessage.innerHTML = '<div class="status-message success">Message sent successfully!</div>';
