@@ -4,19 +4,17 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Contact Us - BloodVine</title>
-<!-- Include EmailJS SDK -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script type="text/javascript">
   // Initialize EmailJS with your public key
   (function() {
-    emailjs.init("kUBZAGfCosCDHAvRT"); // Replace with your actual EmailJS public key
+    emailjs.init("kUBZAGfCosCDHAvRT"); // Make sure this is correct
   })();
   
   // Function to handle form submission
   function sendEmail(event) {
     event.preventDefault();
     
-    // Get form elements
     const form = document.getElementById('contact-form');
     const statusMessage = document.getElementById('status-message');
     const submitBtn = document.getElementById('submit-btn');
@@ -26,24 +24,35 @@
     submitBtn.textContent = 'Sending...';
     statusMessage.innerHTML = '';
     
-    // Send email using EmailJS
+    console.log('Attempting to send email...');
+    
+    // Send email using EmailJS with better error handling
     emailjs.sendForm('service_fh1y1vm', 'template_fnegoya', form)
       .then(function(response) {
         console.log('SUCCESS!', response.status, response.text);
-        statusMessage.innerHTML = '<div class="status-message success">Message sent successfully!</div>';
+        statusMessage.innerHTML = '<div class="status-message success">✓ Message sent successfully!</div>';
         form.reset();
       }, function(error) {
         console.log('FAILED...', error);
-        statusMessage.innerHTML = '<div class="status-message error">Failed to send message. Please try again.</div>';
+        let errorMsg = 'Failed to send message. Please try again.';
+        
+        // More specific error messages
+        if (error.text && error.text.includes('Invalid template')) {
+          errorMsg = 'Template configuration error. Please check your Template ID.';
+        } else if (error.text && error.text.includes('Invalid service')) {
+          errorMsg = 'Service configuration error. Please check your Service ID.';
+        } else if (error.text && error.text.includes('Public key')) {
+          errorMsg = 'Authentication error. Please check your Public Key.';
+        }
+        
+        statusMessage.innerHTML = `<div class="status-message error">✗ ${errorMsg}</div>`;
       })
       .finally(function() {
-        // Reset button state
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Message';
       });
   }
   
-  // Attach event listener when page loads
   window.onload = function() {
     document.getElementById('contact-form').addEventListener('submit', sendEmail);
   };
