@@ -59,15 +59,6 @@
             color: var(--accent-red);
         }
 
-        .admin-badge {
-            background-color: var(--accent-red);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            margin-left: 5px;
-        }
-
         .timestamp {
             color: var(--text-secondary);
             font-size: 12px;
@@ -162,15 +153,6 @@
 
         .user-email {
             color: var(--text-secondary);
-        }
-
-        .user-role {
-            background-color: var(--accent-red);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
         }
 
         .logout-btn {
@@ -344,7 +326,6 @@
         <div id="userInfo" class="user-info" style="display: none;">
             <span>Welcome, <span id="userDisplayName">User</span>!</span>
             <span class="user-email" id="userEmail">user@example.com</span>
-            <span class="user-role" id="userRole">user</span>
             <button id="logoutBtn" class="logout-btn">Logout</button>
         </div>
 
@@ -460,11 +441,6 @@
         let rateLimitTimeout = null;
         let isSendingMessage = false; // Prevent duplicate sends
         
-        // Current user data
-        let currentUserData = {
-            role: 'user'
-        };
-        
         // DOM elements
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
@@ -473,7 +449,6 @@
         const userInfo = document.getElementById('userInfo');
         const userDisplayName = document.getElementById('userDisplayName');
         const userEmail = document.getElementById('userEmail');
-        const userRole = document.getElementById('userRole');
         const rateLimitMessage = document.getElementById('rateLimitMessage');
         
         // Auth modal elements
@@ -569,15 +544,11 @@
                 messageInput.disabled = false;
                 sendButton.disabled = false;
                 
-                // Load user data from database
-                loadUserData(user.uid).then(() => {
-                    // Update user info
-                    userDisplayName.textContent = user.displayName || user.email.split('@')[0];
-                    userEmail.textContent = user.email;
-                    userRole.textContent = currentUserData.role;
-                    
-                    loadMessages();
-                });
+                // Update user info
+                userDisplayName.textContent = user.displayName || user.email.split('@')[0];
+                userEmail.textContent = user.email;
+                
+                loadMessages();
             } else {
                 // User is signed out
                 authRequired.style.display = 'block';
@@ -588,24 +559,6 @@
                 chatMessages.appendChild(authRequired);
             }
         });
-        
-        // Load user data from Firebase
-        function loadUserData(userId) {
-            return database.ref('users/' + userId).once('value').then(snapshot => {
-                if (snapshot.exists()) {
-                    currentUserData = snapshot.val();
-                } else {
-                    // Create new user data with default role
-                    currentUserData = {
-                        username: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
-                        email: auth.currentUser.email,
-                        role: 'user',
-                        createdAt: firebase.database.ServerValue.TIMESTAMP
-                    };
-                    return database.ref('users/' + userId).set(currentUserData);
-                }
-            });
-        }
         
         // Login functionality
         loginSubmit.addEventListener('click', () => {
@@ -710,33 +663,10 @@
             
             const user = auth.currentUser;
             if (user) {
-                // Check for admin commands
+                // Check for clear command
                 if (message === '/clear') {
-                    if (currentUserData.role === 'admin') {
-                        clearAllMessages();
-                    } else {
-                        displaySystemMessage("You don't have permission to use this command.");
-                        resetMessageState();
-                    }
+                    clearAllMessages();
                     return;
-                }
-                
-                // Check for role assignment in message
-                if (message.includes('role:') && currentUserData.role === 'admin') {
-                    const roleMatch = message.match(/role:\s*(\w+)/i);
-                    if (roleMatch) {
-                        const newRole = roleMatch[1].toLowerCase();
-                        const usernameMatch = message.match(/@(\w+)/i);
-                        
-                        if (usernameMatch) {
-                            const targetUsername = usernameMatch[1];
-                            assignRoleToUser(targetUsername, newRole);
-                        } else {
-                            displaySystemMessage("Usage: role:admin @username");
-                        }
-                        resetMessageState();
-                        return;
-                    }
                 }
                 
                 // Normal message
@@ -744,7 +674,6 @@
                     text: message,
                     username: user.displayName || user.email.split('@')[0],
                     userId: user.uid,
-                    userRole: currentUserData.role,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
                 
@@ -770,41 +699,11 @@
             isSendingMessage = false;
         }
         
-        function assignRoleToUser(username, newRole) {
-            // Find user by username and update their role
-            database.ref('users').orderByChild('username').equalTo(username).once('value')
-                .then(snapshot => {
-                    if (snapshot.exists()) {
-                        const userData = snapshot.val();
-                        const userId = Object.keys(userData)[0];
-                        
-                        // Update the user's role
-                        return database.ref('users/' + userId + '/role').set(newRole)
-                            .then(() => {
-                                displaySystemMessage(`Role updated: ${username} is now ${newRole}`);
-                                
-                                // If the current user's role was updated, reload their data
-                                if (userId === auth.currentUser.uid) {
-                                    loadUserData(userId).then(() => {
-                                        userRole.textContent = currentUserData.role;
-                                    });
-                                }
-                            });
-                    } else {
-                        displaySystemMessage(`User ${username} not found`);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error assigning role:', error);
-                    displaySystemMessage('Failed to assign role');
-                });
-        }
-        
         function clearAllMessages() {
             if (confirm('Are you sure you want to clear all messages? This action cannot be undone.')) {
                 database.ref('messages').remove()
                     .then(() => {
-                        displaySystemMessage("Chat has been cleared by admin.");
+                        displaySystemMessage("Chat has been cleared.");
                         resetMessageState();
                     })
                     .catch(error => {
@@ -876,13 +775,9 @@
             const date = new Date(message.timestamp);
             const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            const usernameHtml = message.userRole === 'admin' 
-                ? `<span class="username">${message.username}<span class="admin-badge">ADMIN</span></span>`
-                : `<span class="username">${message.username}</span>`;
-            
             messageElement.innerHTML = `
                 <div class="message-header">
-                    ${usernameHtml}
+                    <span class="username">${message.username}</span>
                     <span class="timestamp">${timeString}</span>
                 </div>
                 <div class="message-content">${message.text}</div>
