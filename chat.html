@@ -417,18 +417,17 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     
     <script>
-        // Firebase configuration - REPLACE WITH YOUR CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyDFN3SVxLU5OFl3ki2H4qeFYvm2rT47dQk",
-            authDomain: "lukew96-82bb6.firebaseapp.com",
-            databaseURL: "https://lukew96-82bb6-default-rtdb.firebaseio.com",
-            projectId: "lukew96-82bb6",
-            storageBucket: "lukew96-82bb6.firebasestorage.app",
-            messagingSenderId: "1041074415159",
-            appId: "1:1041074415159:web:d9a8d1330673d3ad9781b2"
-        };
+        
+const firebaseConfig = {
+  apiKey: "AIzaSyDFN3SVxLU5OFl3ki2H4qeFYvm2rT47dQk",
+  authDomain: "lukew96-82bb6.firebaseapp.com",
+  databaseURL: "https://lukew96-82bb6-default-rtdb.firebaseio.com",
+  projectId: "lukew96-82bb6",
+  storageBucket: "lukew96-82bb6.firebasestorage.app",
+  messagingSenderId: "1041074415159",
+  appId: "1:1041074415159:web:d9a8d1330673d3ad9781b2"
+};
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         
         // Get references to Firebase services
@@ -665,7 +664,7 @@
             if (user) {
                 // Check for clear command
                 if (message === '/clear') {
-                    clearAllMessages();
+                    clearLocalMessages();
                     return;
                 }
                 
@@ -699,21 +698,16 @@
             isSendingMessage = false;
         }
         
-        function clearAllMessages() {
-            if (confirm('Are you sure you want to clear all messages? This action cannot be undone.')) {
-                database.ref('messages').remove()
-                    .then(() => {
-                        displaySystemMessage("Chat has been cleared.");
-                        resetMessageState();
-                    })
-                    .catch(error => {
-                        console.error('Error clearing messages:', error);
-                        displaySystemMessage("Failed to clear messages.");
-                        resetMessageState();
-                    });
-            } else {
-                resetMessageState();
-            }
+        function clearLocalMessages() {
+            // Only clear the displayed messages, not the Firebase database
+            const messages = chatMessages.querySelectorAll('.message');
+            messages.forEach(message => {
+                if (!message.classList.contains('system-message')) {
+                    message.remove();
+                }
+            });
+            displaySystemMessage("Chat display cleared. Messages are still stored in the database.");
+            resetMessageState();
         }
         
         function displaySystemMessage(text) {
