@@ -71,6 +71,7 @@
         .chat-input-container {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
 
         .chat-input {
@@ -97,15 +98,24 @@
             cursor: pointer;
             transition: background-color 0.3s;
             font-weight: 600;
+            white-space: nowrap;
         }
 
-        .send-button:hover {
+        .send-button:hover:not(:disabled) {
             background-color: var(--accent-red-dark);
         }
 
         .send-button:disabled {
             background-color: #555;
             cursor: not-allowed;
+        }
+
+        .rate-limit-message {
+            color: var(--accent-red);
+            font-size: 12px;
+            margin-top: 5px;
+            text-align: center;
+            display: none;
         }
 
         .auth-required {
@@ -325,6 +335,7 @@
             <input type="text" id="messageInput" class="chat-input" placeholder="Type your message..." disabled>
             <button id="sendButton" class="send-button" disabled>Send</button>
         </div>
+        <div id="rateLimitMessage" class="rate-limit-message"></div>
     </div>
 
     <!-- Auth Modal -->
@@ -402,13 +413,13 @@
     <script>
         // Firebase configuration - REPLACE WITH YOUR CONFIG
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDFN3SVxLU5OFl3ki2H4qeFYvm2rT47dQk",
+            authDomain: "lukew96-82bb6.firebaseapp.com",
+            databaseURL: "https://lukew96-82bb6-default-rtdb.firebaseio.com",
+            projectId: "lukew96-82bb6",
+            storageBucket: "lukew96-82bb6.firebasestorage.app",
+            messagingSenderId: "1041074415159",
+            appId: "1:1041074415159:web:d9a8d1330673d3ad9781b2"
         };
 
         // Initialize Firebase
@@ -418,6 +429,11 @@
         const auth = firebase.auth();
         const database = firebase.database();
         
+        // Rate limiting variables
+        let lastMessageTime = 0;
+        const MESSAGE_COOLDOWN = 2000; // 2 seconds between messages
+        let rateLimitTimeout = null;
+        
         // DOM elements
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
@@ -426,6 +442,7 @@
         const userInfo = document.getElementById('userInfo');
         const userDisplayName = document.getElementById('userDisplayName');
         const userEmail = document.getElementById('userEmail');
+        const rateLimitMessage = document.getElementById('rateLimitMessage');
         
         // Auth modal elements
         const authModal = document.getElementById('authModal');
@@ -611,7 +628,7 @@
             auth.signOut();
         });
         
-        // Send message
+        // Send message with rate limiting
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', e => {
             if (e.key === 'Enter') {
@@ -622,6 +639,16 @@
         function sendMessage() {
             const message = messageInput.value.trim();
             if (message === '') return;
+            
+            const now = Date.now();
+            const timeSinceLastMessage = now - lastMessageTime;
+            
+            // Check rate limit
+            if (timeSinceLastMessage < MESSAGE_COOLDOWN) {
+                const timeLeft = MESSAGE_COOLDOWN - timeSinceLastMessage;
+                showRateLimitMessage(timeLeft);
+                return;
+            }
             
             const user = auth.currentUser;
             if (user) {
@@ -636,12 +663,34 @@
                 database.ref('messages').push(messageData)
                     .then(() => {
                         messageInput.value = '';
+                        lastMessageTime = Date.now();
+                        hideRateLimitMessage();
                     })
                     .catch(error => {
                         console.error('Error sending message:', error);
                         alert('Failed to send message. Please try again.');
                     });
             }
+        }
+        
+        function showRateLimitMessage(timeLeft) {
+            const secondsLeft = Math.ceil(timeLeft / 1000);
+            rateLimitMessage.textContent = `Please wait ${secondsLeft} second${secondsLeft !== 1 ? 's' : ''} before sending another message`;
+            rateLimitMessage.style.display = 'block';
+            
+            // Clear any existing timeout
+            if (rateLimitTimeout) {
+                clearTimeout(rateLimitTimeout);
+            }
+            
+            // Hide the message after the cooldown period
+            rateLimitTimeout = setTimeout(() => {
+                hideRateLimitMessage();
+            }, timeLeft);
+        }
+        
+        function hideRateLimitMessage() {
+            rateLimitMessage.style.display = 'none';
         }
         
         // Load and listen for new messages
