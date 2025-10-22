@@ -297,6 +297,24 @@
     </style>
 </head>
 <body>
+    <!-- Header -->
+    <header>
+        <div class="logo">Blood<span>Vine</span></div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="chat.html">Chat</a></li>
+                <li><a href="prices.html">Prices</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button id="loginBtn" class="auth-btn">Login</button>
+            <button id="signupBtn" class="auth-btn">Sign Up</button>
+        </div>
+        <div class="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
 
     <!-- Chat Container -->
     <div class="chat-container">
@@ -399,17 +417,19 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     
     <script>
-        
-const firebaseConfig = {
-  apiKey: "AIzaSyDFN3SVxLU5OFl3ki2H4qeFYvm2rT47dQk",
-  authDomain: "lukew96-82bb6.firebaseapp.com",
-  databaseURL: "https://lukew96-82bb6-default-rtdb.firebaseio.com",
-  projectId: "lukew96-82bb6",
-  storageBucket: "lukew96-82bb6.firebasestorage.app",
-  messagingSenderId: "1041074415159",
-  appId: "1:1041074415159:web:d9a8d1330673d3ad9781b2"
-};
+        // Firebase configuration - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDFN3SVxLU5OFl3ki2H4qeFYvm2rT47dQk",
+            authDomain: "lukew96-82bb6.firebaseapp.com",
+            databaseURL: "https://lukew96-82bb6-default-rtdb.firebaseio.com",
+            projectId: "lukew96-82bb6",
+            storageBucket: "lukew96-82bb6.firebasestorage.app",
+            messagingSenderId: "1041074415159",
+            appId: "1:1041074415159:web:d9a8d1330673d3ad9781b2"
+        };
 
+
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         
         // Get references to Firebase services
