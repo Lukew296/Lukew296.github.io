@@ -8,47 +8,81 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 
+// DOM Elements
+const displayUsername = document.getElementById('displayUsername');
+const displayEmail = document.getElementById('displayEmail');
+const displayRole = document.getElementById('displayRole');
+const displayJoinDate = document.getElementById('displayJoinDate');
+const messageCount = document.getElementById('messageCount');
+const lastActive = document.getElementById('lastActive');
+const adminPanel = document.getElementById('adminPanel');
+
 // Check authentication state
 auth.onAuthStateChanged(user => {
     if (user) {
-        // Load user data
         loadUserData(user);
+        updateLastActive(user.uid);
+        countUserMessages(user.uid);
     } else {
-        // Redirect to login if not authenticated
         window.location.href = 'login.html';
     }
 });
 
-// Load user data and check role
 function loadUserData(user) {
     const userRef = database.ref('users/' + user.uid);
+    
     userRef.once('value').then(snapshot => {
         const userData = snapshot.val() || {};
         
-        // Display user info
-        document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
-        document.getElementById('userEmail').textContent = user.email;
-        document.getElementById('userRole').textContent = userData.role || 'user';
+        // Display basic user info
+        displayUsername.textContent = userData.username || user.displayName || user.email.split('@')[0];
+        displayEmail.textContent = user.email;
+        displayRole.textContent = userData.role || 'User';
+        
+        // Format and display join date
+        const joinDate = userData.createdAt ? new Date(userData.createdAt) : new Date();
+        displayJoinDate.textContent = joinDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
         // Show admin panel if user is admin
         if (userData.role === 'admin') {
-            document.getElementById('adminPanel').style.display = 'block';
-            loadMessages();
+            adminPanel.style.display = 'block';
+            loadAllMessages();
         }
     });
 }
 
-// Load all messages for admin
-function loadMessages() {
-    const messageList = document.getElementById('messageList');
+function updateLastActive(uid) {
+    const userRef = database.ref('users/' + uid);
+    userRef.update({
+        lastActive: firebase.database.ServerValue.TIMESTAMP
+    });
+    
+    // Update last active display
+    const now = new Date();
+    lastActive.textContent = now.toLocaleTimeString();
+}
+
+function countUserMessages(uid) {
     const messagesRef = database.ref('messages');
+    messagesRef.orderByChild('userId').equalTo(uid).once('value', snapshot => {
+        messageCount.textContent = snapshot.numChildren();
+    });
+}
+
+function loadAllMessages() {
+    const messagesRef = database.ref('messages');
+    const messageList = document.getElementById('messageList');
 
     messagesRef.on('value', snapshot => {
         messageList.innerHTML = '';
         snapshot.forEach(childSnapshot => {
             const message = childSnapshot.val();
             const messageKey = childSnapshot.key;
-
+            
             const messageElement = document.createElement('div');
             messageElement.className = 'message-item';
             messageElement.innerHTML = `
@@ -66,15 +100,15 @@ function loadMessages() {
     });
 }
 
-// Toggle message flag
 function toggleFlag(messageId, flagged) {
-    const messageRef = database.ref('messages/' + messageId);
-    messageRef.update({ flagged: flagged });
+    database.ref('messages/' + messageId).update({ flagged: flagged });
 }
 
-// Logout functionality
+// Logout handler
 document.getElementById('logoutBtn').addEventListener('click', () => {
     auth.signOut().then(() => {
         window.location.href = 'index.html';
+    }).catch(error => {
+        console.error('Logout error:', error);
     });
 });
