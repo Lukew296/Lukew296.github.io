@@ -786,12 +786,3 @@ footer a:hover {
     }
 }
 
-.logo-btn {
-    display: inline-block;
-    text-decoration: none;
-}
-
-.logo-btn img {
-    height: 70px;
-    width: auto;
-}
