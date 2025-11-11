@@ -785,3 +785,13 @@ footer a:hover {
         height: 200px;
     }
 }
+
+.logo-btn {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.logo-btn img {
+    height: 50px;
+    width: auto;
+}
