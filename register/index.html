@@ -20,20 +20,24 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script>
-        // Your Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyDBx_i5hxcnhUx-_g8behhNkSeS7mFHMDE",
-            authDomain: "bloodvine-auth.firebaseapp.com",
-            databaseURL: "https://bloodvine-auth-default-rtdb.firebaseio.com",
-            projectId: "bloodvine-auth",
-            storageBucket: "bloodvine-auth.firebasestorage.app",
-            messagingSenderId: "733317481270",
-            appId: "1:733317481270:web:c84833fe0c2d8f8bd82997"
-        };
-        firebase.initializeApp(firebaseConfig);
+    import { initializeApp } from "firebase/app";
 
-        const auth = firebase.auth();
-        const database = firebase.database();
+    const firebaseConfig = {
+        apiKey: "AIzaSyDBx_i5hxcnhUx-_g8behhNkSeS7mFHMDE",
+        authDomain: "bloodvine-auth.firebaseapp.com",
+        databaseURL: "https://bloodvine-auth-default-rtdb.firebaseio.com",
+        projectId: "bloodvine-auth",
+        storageBucket: "bloodvine-auth.firebasestorage.app",
+        messagingSenderId: "733317481270",
+        appId: "1:733317481270:web:c84833fe0c2d8f8bd82997"
+    };
+    console.log("Firebase initialized:", firebase.apps.length);
+
+    // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+            const auth = firebase.auth();
+            const database = firebase.database();
 
         async function hashPassword(password) {
             const enc = new TextEncoder();
